@@ -4,6 +4,9 @@
 # names are unique, there is no order,
 # environments have parents and are never copied
 #
+# l = list(x = 1)
+# l[["x"]] <- NULL
+# l
 
 env_1 = as.environment(
     list(x = 1,
@@ -15,15 +18,18 @@ env_2 = as.environment(
 )
 names(env_1)
 env_1[["x"]]
-x + y
 # + rm, ls, exists, identical
 
+x + y
+eval(x + y)
 eval(expression(x + y), envir = env_1)
 parent.env(env_1) = .GlobalEnv
 eval(expression(x + y), envir = env_1)
 eval(quote(x + y), envir = env_2)
 parent.env(env_2) = .GlobalEnv
 eval(quote(x + y), envir = env_2)
+eval(expression(x + y + 10), envir = env_1)
+# Similar: lm(y ~ x1 + x2, data = df)
 
 class(quote(x + y))
 class(expression(x + y))
@@ -33,20 +39,35 @@ quote(a <- "a")
 # Interesting: <- and = are not always equivalent
 quote(a = "a")
 a
+# median(x <- 1:10)
+# x
 
 # Without evaluation:
 substitute(x + y, env_1)
 
 deparse(substitute(x + y, env_1))
-deparse(substitute(x + y, env_1))
+class(deparse(substitute(x + y, env_1)))
+
 deparse(quote(x + y))
+deparse(quote(x + y + 1:10))
+
+# plot(x = 1:10,
+#      y = 1:10)
 
 # With evaluation:
 eval(substitute(x + y, env_1))
+
 # Non-standard evaluation
+# dplyr::select(df, Col1, Col2)
+# subset(df, col1 == 1)
+# df[df[["col1"]] == 1, ]
+# df[, c("Col1", "Col2")]
 l = list(x = 1,
          y = 2,
          z = 3)
+l[[x]]
+names(l)
+l[["x"]]
 class(l) = c("my_list", class(l))
 `[[.my_list` = function(l, element_name, ...) {
     eval(substitute(element_name), l)
@@ -58,9 +79,12 @@ list(x = 1, y = 2, z = 3)[[x]]
 
 z = as.name("x")
 z
-deparse(substitute(z))
+deparse(substitute(z)) # Again: trick to take variable's name, disregarding value
 eval(z, list(x = 1))
-
+# More practical instance of this idea:
+cols = letters[1:20]
+as.formula(paste("y ~", paste(cols, sep = " + ", collapse = " + ")))
+# This can be passed to for example lm()
 # More: https://adv-r.hadley.nz/evaluation.html
 
 # What is the hierarchy of environments?
@@ -102,6 +126,7 @@ environment(square_again)
 z = 10
 eval(expression(z <<- 1), envir = env_2)
 z
+names(env_2)
 # If it doesn't find it there, it creates a variable in global environment
 
 # Namespaces: as we've seen, what R finds as a value for a given name of a variable,
