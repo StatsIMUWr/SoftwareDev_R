@@ -55,6 +55,8 @@ l[[x]]
 l[[y]]
 l[[z]]
 
+# More: https://adv-r.hadley.nz/evaluation.html
+
 # What is the hierarchy of environments?
 # Global environment
 names(.GlobalEnv)
