@@ -54,6 +54,12 @@ class(l) = c("my_list", class(l))
 l[[x]]
 l[[y]]
 l[[z]]
+list(x = 1, y = 2, z = 3)[[x]]
+
+z = as.name("x")
+z
+deparse(substitute(z))
+eval(z, list(x = 1))
 
 # More: https://adv-r.hadley.nz/evaluation.html
 
