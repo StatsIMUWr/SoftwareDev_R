@@ -1,0 +1,55 @@
+---
+title: "Document with Shiny"
+author: "Mateusz Staniak"
+date: "27 05 2020"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE,
+                      warning = FALSE)
+library(shiny)
+library(data.table)
+library(plotly)
+codebook = fread("./codebook.txt", header = FALSE, fill = FALSE, skip = 7)
+five = readRDS("./test_10000.RDS")
+five$id = 1:nrow(five)
+five = melt(five, measure.vars = colnames(five)[1:100][!grepl("_E", colnames(five)[1:100])],
+            id.vars = colnames(five)[101:111],
+            variable.name = "question", value.name = "answer")
+# merge - base
+# inner_join, left_join, itd - tidyverse
+# merge, dt[dt2]
+five = merge(five, codebook, all.x = TRUE, by.x = "question", by.y = "V1")
+five[, answer := as.numeric(answer)]
+```
+
+```{r }
+shiny::selectInput("country", "Select a country", choices = unique(five$country))
+shiny::sliderInput("id", "Select IDs of participants", min = 1, max = max(five$id),
+                value = c(1, max(five$id)))
+actionButton("recalculate", "Re-calculate, bro")
+```
+
+```{r }
+df = reactive({
+    df = five[country == input$country & id >= input$id[1] & id <= input$id[2], ]
+    df = df[, .(mean_aggreement = mean(answer, na.rm = TRUE)), by = "V2"]
+})
+
+df2 = eventReactive(input$recalculate, {
+    df = five[country == input$country & id >= input$id[1] & id <= input$id[2], ]
+    df = df[, .(mean_aggreement = mean(answer, na.rm = TRUE)), by = "V2"]
+})
+
+renderPlotly({
+    plot_ly(data = df(),
+            x = ~V2, y = ~mean_aggreement, type = "bar") 
+})
+renderPlotly({
+    plot_ly(data = df2(),
+            x = ~V2, y = ~mean_aggreement, type = "bar") 
+})
+```
